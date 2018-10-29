@@ -437,6 +437,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -568,6 +569,7 @@ ALL_MACHINES = \
 	cpu-plugin.lo \
 	cpu-powerpc.lo \
 	cpu-pru.lo \
+	cpu-raisin64.lo \
 	cpu-rs6000.lo \
 	cpu-riscv.lo \
 	cpu-rl78.lo \
@@ -653,6 +655,7 @@ ALL_MACHINES_CFILES = \
 	cpu-plugin.c \
 	cpu-powerpc.c \
 	cpu-pru.c \
+	cpu-raisin64.c \
 	cpu-rs6000.c \
 	cpu-riscv.c \
 	cpu-rl78.c \
@@ -988,6 +991,7 @@ BFD64_BACKENDS = \
 	elf64-mmix.lo \
 	elf64-nfp.lo \
 	elf64-ppc.lo \
+	elf64-raisin64.lo \
 	elf32-riscv.lo \
 	elf64-riscv.lo \
 	elfxx-riscv.lo \
@@ -1020,6 +1024,7 @@ BFD64_BACKENDS_CFILES = \
 	elf64-gen.c \
 	elf64-hppa.c \
 	elf64-ia64-vms.c \
+	elf64-raisin64.c \
 	elf64-mips.c \
 	elf64-mmix.c \
 	elf64-nfp.c \
@@ -1368,6 +1373,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-powerpc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-pru.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-raisin64.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-riscv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rl78.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rs6000.Plo@am__quote@
@@ -1487,6 +1493,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf64-mmix.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf64-nfp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf64-ppc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf64-raisin64.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf64-riscv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf64-s390.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf64-sparc.Plo@am__quote@
