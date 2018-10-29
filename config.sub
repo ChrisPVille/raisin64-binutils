@@ -306,6 +306,7 @@ case $basic_machine in
 	| powerpc | powerpc64 | powerpc64le | powerpcle \
 	| pru \
 	| pyramid \
+	| raisin64 \
 	| riscv32 | riscv64 \
 	| rl78 | rx \
 	| score \
