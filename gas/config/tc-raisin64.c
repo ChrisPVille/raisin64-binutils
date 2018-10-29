@@ -161,13 +161,13 @@ md_assemble (char *str)
   const unsigned long long _64S_RD_MASK = 0xFC000000000000;
   const int _64S_RD_SHIFT = 50;
   const unsigned long long _64S_RD2_MASK = 0x3F00000000000;
-  const int _64S_RD_SHIFT = 44;
+  const int _64S_RD2_SHIFT = 44;
   const unsigned long long _64S_RS1_MASK = 0xFC000000000;
-  const int _64S_RD_SHIFT = 38;
+  const int _64S_RS1_SHIFT = 38;
   const unsigned long long _64S_RS2_MASK = 0x3F00000000;
-  const int _64S_RD_SHIFT = 32;
+  const int _64S_RS2_SHIFT = 32;
   const unsigned long long _64S_IMM_MASK = 0xFFFFFFFF;
-  const int _64S_RD_SHIFT = 0;
+  const int _64S_IMM_SHIFT = 0;
 
   /* Drop leading whitespace.  */
   while (*str == ' ')
