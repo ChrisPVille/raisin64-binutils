@@ -507,7 +507,7 @@ case "${targ}" in
     ;;
 
   raisin64-*-elf)
-    targ_defvec=moxie_elf32_vec
+    targ_defvec=raisin64_elf64_vec
     ;;
 
  h8300*-*-elf | h8300*-*-rtems*)
