@@ -22,8 +22,10 @@
 #include "sysdep.h"
 #include "opcode/raisin64.h"
 
-const int NO16 = 0, IS16 = 1;
-const int NO32 = 0, IS32 = 1;
+#define NO16 0
+#define IS16 1
+#define NO32 0
+#define IS32 1
 
 //Base opcode without leading size field.
 //Again, all instructions are available in 64-bit format, most are available in
