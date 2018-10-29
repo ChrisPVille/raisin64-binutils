@@ -139,6 +139,7 @@
 #include "elf/ppc.h"
 #include "elf/ppc64.h"
 #include "elf/pru.h"
+#include "elf/raisin64.h"
 #include "elf/riscv.h"
 #include "elf/rl78.h"
 #include "elf/rx.h"
@@ -1358,6 +1359,10 @@ dump_relocations (Filedata *          filedata,
 
 	case EM_MMIX:
 	  rtype = elf_mmix_reloc_type (type);
+	  break;
+
+	case EM_RAISIN64:
+	  rtype = elf_raisin64_reloc_type (type);
 	  break;
 
 	case EM_MOXIE:
