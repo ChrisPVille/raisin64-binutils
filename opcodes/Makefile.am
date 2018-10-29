@@ -218,6 +218,8 @@ TARGET_LIBOPCODES_CFILES = \
 	ppc-opc.c \
 	pru-dis.c \
 	pru-opc.c \
+	raisin64-opc.c \
+	raisin64-dis.c \
 	riscv-dis.c \
 	riscv-opc.c \
 	rl78-decode.c \

@@ -2264,6 +2264,8 @@ enum bfd_architecture
 #define bfd_mach_fr550         550
   bfd_arch_moxie,     /* The moxie processor.  */
 #define bfd_mach_moxie         1
+  bfd_arch_raisin64,     /* The raisin64 processor.  */
+#define bfd_mach_raisin64      1
   bfd_arch_ft32,      /* The ft32 processor.  */
 #define bfd_mach_ft32          1
 #define bfd_mach_ft32b         2
@@ -3147,6 +3149,8 @@ to compensate for the borrow when the low bits are added.  */
 /* Moxie ELF relocations.  */
   BFD_RELOC_MOXIE_10_PCREL,
 
+/* Raisin64 ELF relocations.  */
+  BFD_RELOC_RAISIN64_12_PCREL,
 
 /* FT32 ELF relocations.  */
   BFD_RELOC_FT32_10,

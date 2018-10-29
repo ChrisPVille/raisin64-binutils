@@ -146,6 +146,7 @@ ALL_MACHINES = \
 	cpu-plugin.lo \
 	cpu-powerpc.lo \
 	cpu-pru.lo \
+	cpu-raisin64.lo \
 	cpu-rs6000.lo \
 	cpu-riscv.lo \
 	cpu-rl78.lo \
@@ -231,6 +232,7 @@ ALL_MACHINES_CFILES = \
 	cpu-plugin.c \
 	cpu-powerpc.c \
 	cpu-pru.c \
+	cpu-raisin64.c \
 	cpu-rs6000.c \
 	cpu-riscv.c \
 	cpu-rl78.c \
@@ -564,6 +566,7 @@ BFD64_BACKENDS = \
 	elf64-mmix.lo \
 	elf64-nfp.lo \
 	elf64-ppc.lo \
+	elf64-raisin64.lo \
 	elf32-riscv.lo \
 	elf64-riscv.lo \
 	elfxx-riscv.lo \
@@ -596,6 +599,7 @@ BFD64_BACKENDS_CFILES = \
 	elf64-gen.c \
 	elf64-hppa.c \
 	elf64-ia64-vms.c \
+	elf64-raisin64.c \
 	elf64-mips.c \
 	elf64-mmix.c \
 	elf64-nfp.c \

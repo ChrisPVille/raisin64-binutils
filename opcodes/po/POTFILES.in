@@ -171,6 +171,8 @@ ppc-dis.c
 ppc-opc.c
 pru-dis.c
 pru-opc.c
+raisin64-dis.c
+raisin64-opc.c
 riscv-dis.c
 riscv-opc.c
 rl78-decode.c

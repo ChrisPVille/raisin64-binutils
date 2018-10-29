@@ -72,6 +72,7 @@
 #define ARCH_pj
 #define ARCH_powerpc
 #define ARCH_pru
+#define ARCH_raisin64
 #define ARCH_riscv
 #define ARCH_rs6000
 #define ARCH_rl78
@@ -505,6 +506,11 @@ disassembler (enum bfd_architecture a,
 #ifdef ARCH_moxie
     case bfd_arch_moxie:
       disassemble = print_insn_moxie;
+      break;
+#endif
+#ifdef ARCH_raisin64
+    case bfd_arch_raisin64:
+      disassemble = print_insn_raisin64;
       break;
 #endif
 #ifdef ARCH_iq2000
