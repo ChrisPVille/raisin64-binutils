@@ -384,7 +384,6 @@ raisin64_elf_check_relocs (bfd *abfd,
 
 #define ELF_ARCH		bfd_arch_raisin64
 #define ELF_MACHINE_CODE	EM_RAISIN64
-#define ELF_MACHINE_ALT1	EM_RAISIN64_OLD
 #define ELF_MAXPAGESIZE		0x1
 
 #define TARGET_BIG_SYM		raisin64_elf64_vec
