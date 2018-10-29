@@ -25,7 +25,7 @@
 #define WORKING_DOT_WORD
 
 /* This macro is the BFD architecture to pass to `bfd_set_arch_mach'.  */
-#define TARGET_FORMAT "elf64-bigraisin64"
+#define TARGET_FORMAT "elf64-raisin64"
 
 #define TARGET_ARCH bfd_arch_raisin64
 

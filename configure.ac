@@ -1111,6 +1111,9 @@ case "${target}" in
   powerpc-*-beos*)
     noconfigdirs="$noconfigdirs gdb"
     ;;
+  raisin64-*-*)
+    noconfigdirs="$noconfigdirs"
+    ;;
   rs6000-*-lynxos*)
     noconfigdirs="$noconfigdirs gprof"
     ;;

@@ -89,7 +89,7 @@ parse_register_operand (char **ptr)
 {
   int reg;
   char *s = *ptr;
-
+  
   if (*s != '$')
     {
       as_bad (_("expecting register"));
@@ -199,49 +199,51 @@ md_assemble (char *str)
   switch (opcode->itype)
     {
     case RAISIN64_DS1S2:
-      iword = opcode->opcode << SIZE_SHIFT;
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
       {
         int dest, src1, src2;
         dest = parse_register_operand (&op_end);
         if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
-        iword |= _64S_RD_MASK & (dest << _64S_RD_SHIFT);
+        iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
         op_end++;
 
+        while (ISSPACE (*op_end)) op_end++;
         src1  = parse_register_operand (&op_end);
-        iword |= _64S_RS1_MASK & (src1 << _64S_RS1_SHIFT);
-        while (ISSPACE (*op_end)) op_end++;
+        iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
+        op_end++;
 
-        src2  = parse_register_operand (&op_end);
-        iword |= _64S_RS2_MASK & (src2 << _64S_RS2_SHIFT);
         while (ISSPACE (*op_end)) op_end++;
+        src2  = parse_register_operand (&op_end);
+        iword |= _64S_RS2_MASK & ((unsigned long long)src2 << _64S_RS2_SHIFT);
+        op_end++;
         if (*op_end != 0)
             as_warn (_("extra stuff on line ignored"));
       }
       break;
 
     case RAISIN64_DD2S1S2:
-      iword = opcode->opcode << SIZE_SHIFT;
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
       {
         int dest, dest2, src1, src2;
         dest = parse_register_operand (&op_end);
         if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
-        iword |= _64S_RD_MASK & (dest << _64S_RD_SHIFT);
+        iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
         op_end++;
 
         dest2  = parse_register_operand (&op_end);
-        iword |= _64S_RD2_MASK & (dest2 << _64S_RD2_SHIFT);
+        iword |= _64S_RD2_MASK & ((unsigned long long)dest2 << _64S_RD2_SHIFT);
         while (ISSPACE (*op_end)) op_end++;
 
         src1  = parse_register_operand (&op_end);
-        iword |= _64S_RS1_MASK & (src1 << _64S_RS1_SHIFT);
+        iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
         while (ISSPACE (*op_end)) op_end++;
 
         src2  = parse_register_operand (&op_end);
-        iword |= _64S_RS2_MASK & (src2 << _64S_RS2_SHIFT);
+        iword |= _64S_RS2_MASK & ((unsigned long long)src2 << _64S_RS2_SHIFT);
         while (ISSPACE (*op_end)) op_end++;
         if (*op_end != 0)
             as_warn (_("extra stuff on line ignored"));
@@ -249,108 +251,107 @@ md_assemble (char *str)
       break;
 
     case RAISIN64_NONE:
-      iword = opcode->opcode << SIZE_SHIFT;
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
       if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
       break;
 
     case RAISIN64_JDS1I:
-      iword = opcode->opcode << SIZE_SHIFT;
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
-
-      int dest, src1;
-      dest = parse_register_operand (&op_end);
-      if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
-      iword |= _64S_RD_MASK & (dest << _64S_RD_SHIFT);
-      op_end++;
-
-      src1  = parse_register_operand (&op_end);
-      iword |= _64S_RS1_MASK & (src1 << _64S_RS1_SHIFT);
-      while (ISSPACE (*op_end)) op_end++;
-
       {
-        expressionS arg;
-        char *where;
-        int a;
+       int dest, src1;
+       dest = parse_register_operand (&op_end);
+       if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
+       iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
+       op_end++;
 
-        op_end = parse_exp_save_ilp (op_end, &arg);
-        where = frag_more (4);
-        fix_new_exp (frag_now,
-                    (where - frag_now->fr_literal),
-                    4,
-                    &arg,
-                    0,
-                    BFD_RELOC_32);
+       src1  = parse_register_operand (&op_end);
+       iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
+       while (ISSPACE (*op_end)) op_end++;
 
-        if (*op_end != ',')
-            {
-            as_bad (_("expecting comma delimited operands"));
-            ignore_rest_of_line ();
-            return;
-            }
-        op_end++;
+       {
+         expressionS arg;
+         char *where;
 
-        while (ISSPACE (*op_end)) op_end++;
-        if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
+         op_end = parse_exp_save_ilp (op_end, &arg);
+         where = frag_more (4);
+         fix_new_exp (frag_now,
+                     (where - frag_now->fr_literal),
+                     4,
+                     &arg,
+                     0,
+                     BFD_RELOC_32);
 
+         if (*op_end != ',')
+             {
+             as_bad (_("expecting comma delimited operands"));
+             ignore_rest_of_line ();
+             return;
+             }
+         op_end++;
+
+         while (ISSPACE (*op_end)) op_end++;
+         if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
+
+       }
       }
       break;
 
     case RAISIN64_DS1I:
-      iword = opcode->opcode << SIZE_SHIFT;
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
-
-      int dest, src1;
-      dest = parse_register_operand (&op_end);
-      if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
-      iword |= _64S_RD_MASK & (dest << _64S_RD_SHIFT);
-      op_end++;
-
-      src1  = parse_register_operand (&op_end);
-      iword |= _64S_RS1_MASK & (src1 << _64S_RS1_SHIFT);
-      while (ISSPACE (*op_end)) op_end++;
-
-      md_chars_to_number(
       {
-        expressionS arg;
-        char *where;
-        int a;
-
-        op_end = parse_exp_save_ilp (op_end, &arg);
-        where = frag_more (4);
-        fix_new_exp (frag_now,
-                    (where - frag_now->fr_literal),
-                    4,
-                    &arg,
-                    0,
-                    BFD_RELOC_32);
-
-        if (*op_end != ',')
-            {
-            as_bad (_("expecting comma delimited operands"));
-            ignore_rest_of_line ();
-            return;
-            }
+        int dest, src1;
+        dest = parse_register_operand (&op_end);
+        if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
+        iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
         op_end++;
 
+        src1  = parse_register_operand (&op_end);
+        iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
         while (ISSPACE (*op_end)) op_end++;
-        if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
 
+        //md_chars_to_number(
+        {
+          expressionS arg;
+          char *where;
+
+          op_end = parse_exp_save_ilp (op_end, &arg);
+          where = frag_more (4);
+          fix_new_exp (frag_now,
+                      (where - frag_now->fr_literal),
+                      4,
+                      &arg,
+                      0,
+                      BFD_RELOC_32);
+
+          if (*op_end != ',')
+              {
+              as_bad (_("expecting comma delimited operands"));
+              ignore_rest_of_line ();
+              return;
+              }
+          op_end++;
+
+          while (ISSPACE (*op_end)) op_end++;
+          if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
+
+        }
       }
       break;
 
     case RAISIN64_JI:
-      iword = opcode->opcode << SIZE_SHIFT;
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
 
       {
         expressionS arg;
         char *where;
-        int a;
 
         op_end = parse_exp_save_ilp (op_end, &arg);
         where = frag_more (6);

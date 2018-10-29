@@ -55,7 +55,7 @@ print_insn_raisin64 (bfd_vma addr, struct disassemble_info * info)
   stream = info->stream;
   const raisin64_opc_info_t * opcode;
   bfd_byte buffer[8];
-  unsigned long long iword;
+  volatile unsigned long long iword;
   fpr = info->fprintf_func;
 
   if ((status = info->read_memory_func (addr, buffer, 8, info)))
@@ -64,7 +64,7 @@ print_insn_raisin64 (bfd_vma addr, struct disassemble_info * info)
   iword = bfd_getb64 (buffer);
 
   //TODO 64-bit only
-  if(iword>>62 == 2)
+  if(iword>>62 == 3)
   {
     opcode = &raisin64_opc_info[(iword >> 56) & 0x3F];
     switch (opcode->itype)
