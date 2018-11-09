@@ -44,6 +44,19 @@ const char EXP_CHARS[] = "eE";
 
 static valueT md_chars_to_number (char * buf, int n);
 
+typedef struct machine_op
+{
+  char *error;
+  unsigned long opcode;
+  expressionS exp;
+  int pcrel;
+  int size;
+  int reloc_offset;		/* Offset of reloc within insn.  */
+  bfd_reloc_code_real_type reloc;
+  int HI;
+  int LO;
+} machine_op_t;
+
 void
 md_operand (expressionS *op __attribute__((unused)))
 {
@@ -99,32 +112,42 @@ parse_register_operand (char **ptr)
   if (s[1] == 'f' && s[2] == 'p')
     {
       *ptr += 3;
-      return 0;
+      return 63;
     }
   if (s[1] == 's' && s[2] == 'p')
     {
       *ptr += 3;
-      return 1;
+      return 62;
+    }
+  if (s[1] == 'z'  && s[2] == 'e'  && s[3] == 'r'  && s[4] == 'o')
+    {
+      ptr += 5;
+      return 0;
     }
   if (s[1] == 'r')
     {
-      reg = s[2] - '0';
-      if ((reg < 0) || (reg > 9))
-	{
-	  as_bad (_("illegal register number"));
-	  ignore_rest_of_line ();
-	  return -1;
-	}
-      if (reg >= 0 && reg <= 6)
-	{
-	  int r2 = s[3] - '0';
-	  if ((r2 >= 0) && (r2 <= 9))
-	    {
-          reg *= 10;
-	      reg += r2;
-	      *ptr += 1;
-	    }
-	}
+      char hi = s[2] - '0';
+      char lo = s[3] - '0';
+        
+      if(lo < 0 || lo > 9)
+      {
+        if(hi < 0 || hi > 6)
+        {
+          as_bad (_("illegal register number"));
+          ignore_rest_of_line ();
+          return -1;
+        }
+        reg = lo + 10*hi;
+        *ptr += 4;
+        return 4; //TODO Is this right?
+      }
+      else if(hi < 0 || hi > 9)
+      {
+        as_bad (_("illegal register number"));
+        ignore_rest_of_line ();
+        return -1;
+      }
+      else reg = hi;
     }
   else
     {
@@ -257,7 +280,7 @@ md_assemble (char *str)
       if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
       break;
 
-    case RAISIN64_JDS1I:
+    case RAISIN64_JDS1I: //TODO
       iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
@@ -282,7 +305,7 @@ md_assemble (char *str)
                      (where - frag_now->fr_literal),
                      4,
                      &arg,
-                     0,
+                     1,
                      BFD_RELOC_32);
 
          if (*op_end != ',')
@@ -322,12 +345,7 @@ md_assemble (char *str)
 
           op_end = parse_exp_save_ilp (op_end, &arg);
           where = frag_more (4);
-          fix_new_exp (frag_now,
-                      (where - frag_now->fr_literal),
-                      4,
-                      &arg,
-                      0,
-                      BFD_RELOC_32);
+
 
           if (*op_end != ',')
               {
