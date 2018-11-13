@@ -25,6 +25,13 @@
 #include "opcode/raisin64.h"
 #include "elf/raisin64.h"
 
+#define BAD_LINE(x) {\
+  as_bad(_(#x));\
+  ignore_rest_of_line ();\
+  return;}
+#define EAT_COMMA if(*op_end != ',') BAD_LINE("expecting comma delimited register operands"); op_end++;
+#define EAT_SPACES while(ISSPACE(*op_end)) op_end++;
+
 extern const raisin64_opc_info_t raisin64_opc_info[64];
 
 const char comment_chars[]        = "#";
@@ -97,6 +104,15 @@ parse_exp_save_ilp (char *s, expressionS *op)
   return s;
 }
 
+static int match_name(const char *name, const char* src)
+{
+  for(int i = 0; name[i]!=NULL; i++)
+  {
+    if(name[i] != src[i]) return 0;
+  }
+  return 1;
+}
+
 static int
 parse_register_operand (char **ptr)
 {
@@ -104,61 +120,71 @@ parse_register_operand (char **ptr)
   char *s = *ptr;
   
   if (*s != '$')
+  {
+    as_bad (_("expecting register"));
+    ignore_rest_of_line ();
+    return -1;
+  }
+
+  *ptr += 1;
+  s += 1;
+
+  if (match_name("lr", s))
+  {
+    *ptr += 2;
+    return 63;
+  }
+  else if (match_name("sp", s))
+  {
+    *ptr += 2;
+    return 62;
+  }
+  else if (match_name("zero", s))
+  {
+    *ptr += 4;
+    return 0;
+  }
+  else if (s[0] == 'r')
+  {
+    char hi = s[1] - '0';
+    char lo = s[2] - '0';
+
+    if(lo >= 0 && lo <= 9)
     {
-      as_bad (_("expecting register"));
-      ignore_rest_of_line ();
-      return -1;
-    }
-  if (s[1] == 'f' && s[2] == 'p')
-    {
-      *ptr += 3;
-      return 63;
-    }
-  if (s[1] == 's' && s[2] == 'p')
-    {
-      *ptr += 3;
-      return 62;
-    }
-  if (s[1] == 'z'  && s[2] == 'e'  && s[3] == 'r'  && s[4] == 'o')
-    {
-      ptr += 5;
-      return 0;
-    }
-  if (s[1] == 'r')
-    {
-      char hi = s[2] - '0';
-      char lo = s[3] - '0';
-        
-      if(lo < 0 || lo > 9)
+      if(hi >= 0 && hi <= 6)
       {
-        if(hi < 0 || hi > 6)
-        {
-          as_bad (_("illegal register number"));
-          ignore_rest_of_line ();
-          return -1;
-        }
         reg = lo + 10*hi;
-        *ptr += 4;
-        return 4; //TODO Is this right?
+        *ptr += 3;
+        return reg;
       }
-      else if(hi < 0 || hi > 9)
+      else
       {
         as_bad (_("illegal register number"));
         ignore_rest_of_line ();
         return -1;
       }
-      else reg = hi;
     }
-  else
+    else if(hi >= 0 && hi <= 9)
+    {
+      *ptr += 2;
+      return hi;
+    }
+    else
     {
       as_bad (_("illegal register number"));
       ignore_rest_of_line ();
       return -1;
     }
+  }
+  else
+  {
+    as_bad (_("illegal register number"));
+    ignore_rest_of_line ();
+    return -1;
+  }
 
-  *ptr += 3;
-
-  return reg + 2;
+  as_abort(__FILE__,__LINE__,"Broke out of register ident loop");
+  return -1;
 }
 
 /* This is the guts of the machine-dependent assembler.  STR points to
@@ -217,7 +243,7 @@ md_assemble (char *str)
       return;
     }
 
-  p = frag_more (8);
+  p = frag_more(8);
 
   switch (opcode->itype)
     {
@@ -228,21 +254,19 @@ md_assemble (char *str)
       {
         int dest, src1, src2;
         dest = parse_register_operand (&op_end);
-        if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
         iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
-        op_end++;
+        EAT_COMMA;
 
-        while (ISSPACE (*op_end)) op_end++;
+        EAT_SPACES;
         src1  = parse_register_operand (&op_end);
         iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
-        op_end++;
+        EAT_COMMA;
 
-        while (ISSPACE (*op_end)) op_end++;
+        EAT_SPACES;
         src2  = parse_register_operand (&op_end);
         iword |= _64S_RS2_MASK & ((unsigned long long)src2 << _64S_RS2_SHIFT);
-        op_end++;
-        if (*op_end != 0)
-            as_warn (_("extra stuff on line ignored"));
+
+        if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
       }
       break;
 
@@ -460,7 +484,6 @@ struct option md_longopts[] =
 };
 
 size_t md_longopts_size = sizeof (md_longopts);
-
 const char *md_shortopts = "";
 
 int
