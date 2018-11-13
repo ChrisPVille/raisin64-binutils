@@ -41,6 +41,11 @@ TAGS.sub
 .gdbinit
 .gdb_history
 
+# eclipse project files
+.cproject
+.project
+.settings
+
 # ignore core files, but not java/net/protocol/core/
 core
 !core/
