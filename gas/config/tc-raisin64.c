@@ -277,31 +277,32 @@ md_assemble (char *str)
       {
         int dest, dest2, src1, src2;
         dest = parse_register_operand (&op_end);
-        if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
         iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
-        op_end++;
+        EAT_COMMA;
 
+        EAT_SPACES;
         dest2  = parse_register_operand (&op_end);
         iword |= _64S_RD2_MASK & ((unsigned long long)dest2 << _64S_RD2_SHIFT);
-        while (ISSPACE (*op_end)) op_end++;
+        EAT_COMMA;
 
+        EAT_SPACES;
         src1  = parse_register_operand (&op_end);
         iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
-        while (ISSPACE (*op_end)) op_end++;
+        EAT_COMMA;
 
+        EAT_SPACES;
         src2  = parse_register_operand (&op_end);
         iword |= _64S_RS2_MASK & ((unsigned long long)src2 << _64S_RS2_SHIFT);
-        while (ISSPACE (*op_end)) op_end++;
-        if (*op_end != 0)
-            as_warn (_("extra stuff on line ignored"));
+
+        if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
       }
       break;
 
     case RAISIN64_NONE:
       iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
-      while (ISSPACE (*op_end))	op_end++;
-      if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
+      EAT_SPACES;
+      if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
       break;
 
     case RAISIN64_JDS1I: //TODO
@@ -309,41 +310,33 @@ md_assemble (char *str)
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
       {
-       int dest, src1;
-       dest = parse_register_operand (&op_end);
-       if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
-       iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
-       op_end++;
+        int dest, src1;
+        dest = parse_register_operand (&op_end);
+        iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
+        EAT_SPACES;
 
-       src1  = parse_register_operand (&op_end);
-       iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
-       while (ISSPACE (*op_end)) op_end++;
+        EAT_COMMA;
+        src1  = parse_register_operand (&op_end);
+        iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
+        EAT_SPACES;
 
-       {
-         expressionS arg;
-         char *where;
+        EAT_COMMA;
+        {
+          expressionS arg;
+          char *where;
 
-         op_end = parse_exp_save_ilp (op_end, &arg);
-         where = frag_more (4);
-         fix_new_exp (frag_now,
-                     (where - frag_now->fr_literal),
-                     4,
-                     &arg,
-                     1,
-                     BFD_RELOC_32);
+          op_end = parse_exp_save_ilp (op_end, &arg);
+          where = frag_more (4);
+          fix_new_exp (frag_now, //Which fragment
+                     (frag_now->fr_literal+4), //Location in current fragment (4 bytes into the 8-byte inst)
+                     4,    //4-byte relocation
+                     &arg, //Our Expression
+                     TRUE, //PC-Relative
+                     BFD_RELOC_32); //BFD Relocation type
 
-         if (*op_end != ',')
-             {
-             as_bad (_("expecting comma delimited operands"));
-             ignore_rest_of_line ();
-             return;
-             }
-         op_end++;
-
-         while (ISSPACE (*op_end)) op_end++;
-         if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
-
-       }
+          EAT_SPACES;
+          if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
+        }
       }
       break;
 
@@ -354,34 +347,21 @@ md_assemble (char *str)
       {
         int dest, src1;
         dest = parse_register_operand (&op_end);
-        if (*op_end != ',') as_warn (_("expecting comma delimited register operands"));
         iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
-        op_end++;
+        EAT_COMMA;
 
+        EAT_SPACES;
         src1  = parse_register_operand (&op_end);
         iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
-        while (ISSPACE (*op_end)) op_end++;
+        EAT_COMMA;
 
-        //md_chars_to_number(
+        EAT_SPACES;
         {
           expressionS arg;
-          char *where;
-
           op_end = parse_exp_save_ilp (op_end, &arg);
-          where = frag_more (4);
 
-
-          if (*op_end != ',')
-              {
-              as_bad (_("expecting comma delimited operands"));
-              ignore_rest_of_line ();
-              return;
-              }
-          op_end++;
-
-          while (ISSPACE (*op_end)) op_end++;
-          if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
-
+          EAT_SPACES;
+          if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
         }
       }
       break;
@@ -389,33 +369,29 @@ md_assemble (char *str)
     case RAISIN64_JI:
       iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
-      while (ISSPACE (*op_end))	op_end++;
+      EAT_SPACES;
 
       {
         expressionS arg;
-        char *where;
 
         op_end = parse_exp_save_ilp (op_end, &arg);
-        where = frag_more (6);
-        fix_new_exp (frag_now,
-                    (where - frag_now->fr_literal),
-                    6,
-                    &arg,
-                    0,
-                    BFD_RELOC_64);
+        fix_new_exp (frag_now, //Which fragment
+                    (frag_now->fr_literal+1), //Location in current fragment
+                    7, //7-byte relocation
+                    &arg, //Expression
+                    FALSE, //Not PC-Relative
+                    BFD_RELOC_64); //BFD Relocation Type
 
-        while (ISSPACE (*op_end)) op_end++;
-        if (*op_end != 0) as_warn (_("extra stuff on line ignored"));
+        EAT_SPACES;
+        if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
 
       }
       break;
 
     case RAISIN64_BAD:
       iword = 0;
-      while (ISSPACE (*op_end))
-	op_end++;
-      if (*op_end != 0)
-	as_warn (_("extra stuff on line ignored"));
+      EAT_SPACES;
+      if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
       break;
 
     default:
@@ -425,11 +401,9 @@ md_assemble (char *str)
   md_number_to_chars (p, iword, 8);
   dwarf2_emit_insn (8);
 
-  while (ISSPACE (*op_end))
-    op_end++;
+  EAT_SPACES;
 
-  if (*op_end != 0)
-    as_warn (_("extra stuff on line ignored"));
+  if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
 
   if (pending_reloc)
     as_bad (_("Something forgot to clean up\n"));
