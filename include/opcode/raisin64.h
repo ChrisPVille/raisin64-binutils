@@ -40,13 +40,14 @@
 #define RAISIN64_DS1S2I   0x200
 
 //Automatically sized forms
-#define RAISIN64_NONE     0x300
-#define RAISIN64_DS1S2    0x301
-#define RAISIN64_S1       0x302
-#define RAISIN64_DD2S1S2  0x303
-#define RAISIN64_DS1I     0x304
-#define RAISIN64_JDS1I    0x305
-#define RAISIN64_DI       0x306
+#define RAISIN64_NONE     0x300 //None
+#define RAISIN64_DS1S2    0x301 //One Dest, two Src
+#define RAISIN64_S1       0x302 //One Src
+#define RAISIN64_DD2S1S2  0x303 //Two Dest, two Src
+#define RAISIN64_DS1I     0x304 //One Dest, one Src, imm
+#define RAISIN64_BDS1I    0x305 //One Dest, one Src, imm, Branching
+#define RAISIN64_MDS1I    0x306 //One Dest, one Src, imm, Memory
+#define RAISIN64_DI       0x307 //One Dest, imm
 
 /*
   #define RAISIN64_64S_32R_NONE     0x100
@@ -69,6 +70,7 @@ typedef struct raisin64_opc_info_t
   int           is16;
   unsigned char opcode_16;
   int           is32;
+  int           signedImm;
   const char*   name;
 } raisin64_opc_info_t;
 

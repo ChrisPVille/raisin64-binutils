@@ -30,6 +30,7 @@
   ignore_rest_of_line ();\
   return;}
 #define EAT_COMMA if(*op_end != ',') BAD_LINE("expecting comma delimited register operands"); op_end++;
+#define EAT_CLOSEPAREN if(*op_end != ')') BAD_LINE("expecting close parenthesis"); op_end++;
 #define EAT_SPACES while(ISSPACE(*op_end)) op_end++;
 
 extern const raisin64_opc_info_t raisin64_opc_info[64];
@@ -265,8 +266,6 @@ md_assemble (char *str)
         EAT_SPACES;
         src2  = parse_register_operand (&op_end);
         iword |= _64S_RS2_MASK & ((unsigned long long)src2 << _64S_RS2_SHIFT);
-
-        if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
       }
       break;
 
@@ -293,19 +292,15 @@ md_assemble (char *str)
         EAT_SPACES;
         src2  = parse_register_operand (&op_end);
         iword |= _64S_RS2_MASK & ((unsigned long long)src2 << _64S_RS2_SHIFT);
-
-        if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
       }
       break;
 
     case RAISIN64_NONE:
       iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
-      EAT_SPACES;
-      if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
       break;
 
-    case RAISIN64_JDS1I: //TODO
+    case RAISIN64_BDS1I:
       iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       while (ISSPACE (*op_end))	op_end++;
@@ -323,19 +318,14 @@ md_assemble (char *str)
         EAT_COMMA;
         {
           expressionS arg;
-          char *where;
 
           op_end = parse_exp_save_ilp (op_end, &arg);
-          where = frag_more (4);
           fix_new_exp (frag_now, //Which fragment
-                     (4), //Location in current fragment (4 bytes into the 8-byte inst)
+                     p - frag_now->fr_literal + 4, //Location in current fragment (4 bytes into the 8-byte inst)
                      4,    //4-byte relocation
                      &arg, //Our Expression
                      TRUE, //PC-Relative
                      BFD_RELOC_32); //BFD Relocation type
-
-          EAT_SPACES;
-          if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
         }
       }
       break;
@@ -359,10 +349,68 @@ md_assemble (char *str)
         {
           expressionS arg;
           op_end = parse_exp_save_ilp (op_end, &arg);
-
-          EAT_SPACES;
-          if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
+          if(opcode->signedImm)
+          {
+            if(arg.X_add_number < -((long long)1<<31) || arg.X_add_number > ((long long)1<<31)-1)
+              BAD_LINE("immediate value too large");
+          }
+          else
+          {
+            if(arg.X_add_number > ((long long)1<<32)-1)
+            {
+              BAD_LINE("immediate value too large");
+            }
+            else if(arg.X_add_number < 0)
+            {
+              as_warn("signed immediate value used for unsigned instruction");
+            }
+          }
+          iword |= _64S_IMM_MASK & ((unsigned long long)arg.X_add_number << _64S_IMM_SHIFT);
         }
+      }
+      break;
+
+    case RAISIN64_MDS1I:
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
+      iword |= SIZE_MASK;
+      while (ISSPACE (*op_end)) op_end++;
+      {
+        int dest, src1;
+        dest = parse_register_operand (&op_end);
+        iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
+        EAT_COMMA;
+
+        EAT_SPACES;
+        if(ISDIGIT(*op_end) || *op_end=='-') //Offset field
+        {
+          expressionS arg;
+          op_end = parse_exp_save_ilp (op_end, &arg);
+          if(opcode->signedImm)
+          {
+            if(arg.X_add_number < -((long long)1<<31) || arg.X_add_number > ((long long)1<<31)-1)
+              BAD_LINE("immediate value too large");
+          }
+          else
+          {
+            if(arg.X_add_number > ((long long)1<<32)-1)
+            {
+              BAD_LINE("immediate value too large");
+            }
+            else if(arg.X_add_number < 0)
+            {
+              as_warn("signed immediate value used for unsigned instruction");
+            }
+          }
+          iword |= _64S_IMM_MASK & ((unsigned long long)arg.X_add_number << _64S_IMM_SHIFT);
+          EAT_SPACES;
+        }
+
+        if(*op_end != '(') BAD_LINE("missing '(' on opcode requiring indirect register access");
+        op_end++;
+
+        src1  = parse_register_operand (&op_end);
+        iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
+        EAT_CLOSEPAREN;
       }
       break;
 
@@ -374,9 +422,33 @@ md_assemble (char *str)
         int src1;
         src1  = parse_register_operand (&op_end);
         iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
+      }
+      break;
 
+    case RAISIN64_DI:
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
+      iword |= SIZE_MASK;
+      while (ISSPACE (*op_end)) op_end++;
+      {
+        int dest;
+        dest = parse_register_operand (&op_end);
+        iword |= _64S_RD_MASK & ((unsigned long long)dest << _64S_RD_SHIFT);
         EAT_SPACES;
-        if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
+
+        EAT_COMMA;
+        {
+          expressionS arg;
+          op_end = parse_exp_save_ilp (op_end, &arg);
+          if(arg.X_add_number > ((long long)1<<32)-1)
+          {
+            BAD_LINE("immediate value too large");
+          }
+          else if(arg.X_add_number < 0)
+          {
+            as_warn("signed immediate value used for unsigned instruction");
+          }
+          iword |= _64S_IMM_MASK & ((unsigned long long)arg.X_add_number << _64S_IMM_SHIFT);
+        }
       }
       break;
 
@@ -384,28 +456,21 @@ md_assemble (char *str)
       iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
       EAT_SPACES;
-
       {
         expressionS arg;
 
         op_end = parse_exp_save_ilp (op_end, &arg);
         fix_new_exp (frag_now, //Which fragment
-                    (frag_now->fr_literal+1), //Location in current fragment
+                    p - frag_now->fr_literal + 1, //Location in current fragment
                     8, //8-byte relocation (masked elsewhere)
                     &arg, //Expression
                     FALSE, //Not PC-Relative
                     BFD_RELOC_64); //BFD Relocation Type
-
-        EAT_SPACES;
-        if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
-
       }
       break;
 
     case RAISIN64_BAD:
       iword = 0;
-      EAT_SPACES;
-      if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
       break;
 
     default:
@@ -499,14 +564,20 @@ md_apply_fix (fixS *fixP ATTRIBUTE_UNUSED,
   switch (fixP->fx_r_type)
     {
     case BFD_RELOC_64:
-      md_chars_to_number(buf, 7);
-      buf += 7;
+      if (!val) break;
+      if (val > ((long long)1<<56)-1) as_bad_where (fixP->fx_file, fixP->fx_line,
+                      _("relocation too far BFD_RELOC_64"));
+      val >>= 1;
+      newval = md_chars_to_number (buf, 7);
+      newval |= val & 0xffffffffffffff;
+      md_number_to_chars (buf, newval, 7);
       break;
 
     case BFD_RELOC_32:
       if (!val) break;
-      if (val < -4294967296 || val > 4294967295) as_bad_where (fixP->fx_file, fixP->fx_line,
-                      _("pcrel too far BFD_RELOC_RAISIN64_12"));
+      if (val < -((long long)1<<32) || val > ((long long)1<<32)-1) as_bad_where (fixP->fx_file, fixP->fx_line,
+                      _("pcrel too far BFD_RELOC_32"));
+      val -= 4; //We need to subtract the first 4 bytes of the instruction (so we don't jump into the middle of some instruction)
       /* 32 bit offset even numbered, so we remove right bit.  */
       val >>= 1;
       newval = md_chars_to_number (buf, 4);
@@ -516,7 +587,7 @@ md_apply_fix (fixS *fixP ATTRIBUTE_UNUSED,
 
     case BFD_RELOC_RAISIN64_12_PCREL:
       if (!val) break;
-      if (val < -4096 || val > 4097) as_bad_where (fixP->fx_file, fixP->fx_line,
+      if (val < -(1<<12) || val > (1<<12)-1) as_bad_where (fixP->fx_file, fixP->fx_line,
                       _("pcrel too far BFD_RELOC_RAISIN64_12"));
       /* 11 bit offset even numbered, so we remove right bit.  */
       val >>= 1;
