@@ -98,3 +98,15 @@ const raisin64_opc_info_t raisin64_opc_info[64] =
     { 0x3e, RAISIN64_JI,      NO16, 0, NO32, "jali" },
     { 0x3f, RAISIN64_JI,      NO16, 0, NO32, "ji" }
 };
+
+const unsigned char raisin64_16op_map[8] =
+  {
+      0x00,
+      0x01,
+      0x20,
+      0x21,
+      0x1C,
+      0x1F,
+      0x1E,
+      0x14
+  };

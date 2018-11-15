@@ -73,3 +73,6 @@ typedef struct raisin64_opc_info_t
 } raisin64_opc_info_t;
 
 extern const raisin64_opc_info_t raisin64_opc_info[64];
+
+//Maps the 16-bit opcode IDs to their 32/64-bit format for ease of decoding
+extern const unsigned char raisin64_16op_map[8];

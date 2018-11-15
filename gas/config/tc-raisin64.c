@@ -106,7 +106,7 @@ parse_exp_save_ilp (char *s, expressionS *op)
 
 static int match_name(const char *name, const char* src)
 {
-  for(int i = 0; name[i]!=NULL; i++)
+  for(int i = 0; name[i]!=0; i++)
   {
     if(name[i] != src[i]) return 0;
   }
@@ -328,7 +328,7 @@ md_assemble (char *str)
           op_end = parse_exp_save_ilp (op_end, &arg);
           where = frag_more (4);
           fix_new_exp (frag_now, //Which fragment
-                     (frag_now->fr_literal+4), //Location in current fragment (4 bytes into the 8-byte inst)
+                     (4), //Location in current fragment (4 bytes into the 8-byte inst)
                      4,    //4-byte relocation
                      &arg, //Our Expression
                      TRUE, //PC-Relative
@@ -366,6 +366,20 @@ md_assemble (char *str)
       }
       break;
 
+    case RAISIN64_S1:
+      iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
+      iword |= SIZE_MASK;
+      while (ISSPACE (*op_end)) op_end++;
+      {
+        int src1;
+        src1  = parse_register_operand (&op_end);
+        iword |= _64S_RS1_MASK & ((unsigned long long)src1 << _64S_RS1_SHIFT);
+
+        EAT_SPACES;
+        if (ISPRINT(*op_end)) as_warn (_("extra stuff on line ignored"));
+      }
+      break;
+
     case RAISIN64_JI:
       iword = (unsigned long long)opcode->opcode << SIZE_SHIFT;
       iword |= SIZE_MASK;
@@ -377,7 +391,7 @@ md_assemble (char *str)
         op_end = parse_exp_save_ilp (op_end, &arg);
         fix_new_exp (frag_now, //Which fragment
                     (frag_now->fr_literal+1), //Location in current fragment
-                    7, //7-byte relocation
+                    8, //8-byte relocation (masked elsewhere)
                     &arg, //Expression
                     FALSE, //Not PC-Relative
                     BFD_RELOC_64); //BFD Relocation Type
@@ -479,31 +493,25 @@ md_apply_fix (fixS *fixP ATTRIBUTE_UNUSED,
 	      valueT * valP ATTRIBUTE_UNUSED, segT seg ATTRIBUTE_UNUSED)
 {
   char *buf = fixP->fx_where + fixP->fx_frag->fr_literal;
-  long val = *valP;
-  long newval;
-  long max, min;
+  long long val = *valP;
+  long long newval;
 
-  max = min = 0;
   switch (fixP->fx_r_type)
     {
     case BFD_RELOC_64:
-      buf[0] = val >> 40;
-      buf[1] = val >> 32;
-      buf[2] = val >> 24;
-      buf[3] = val >> 16;
-      buf[4] = val >> 8;
-      buf[5] = val >> 0;
-      buf += 6;
+      md_chars_to_number(buf, 7);
+      buf += 7;
       break;
 
-    case BFD_RELOC_16:
-      buf[0] = val >> 8;
-      buf[1] = val >> 0;
-      buf += 2;
-      break;
-
-    case BFD_RELOC_8:
-      *buf++ = val;
+    case BFD_RELOC_32:
+      if (!val) break;
+      if (val < -4294967296 || val > 4294967295) as_bad_where (fixP->fx_file, fixP->fx_line,
+                      _("pcrel too far BFD_RELOC_RAISIN64_12"));
+      /* 32 bit offset even numbered, so we remove right bit.  */
+      val >>= 1;
+      newval = md_chars_to_number (buf, 4);
+      newval |= val & 0xffffffff;
+      md_number_to_chars (buf, newval, 4);
       break;
 
     case BFD_RELOC_RAISIN64_12_PCREL:
@@ -520,9 +528,6 @@ md_apply_fix (fixS *fixP ATTRIBUTE_UNUSED,
     default:
       abort ();
     }
-
-  if (max != 0 && (val < min || val > max))
-    as_bad_where (fixP->fx_file, fixP->fx_line, _("offset out of range"));
 
   if (fixP->fx_addsy == NULL && fixP->fx_pcrel == 0)
     fixP->fx_done = 1;
@@ -562,6 +567,9 @@ tc_gen_reloc (asection *section ATTRIBUTE_UNUSED, fixS *fixP)
   switch (fixP->fx_r_type)
     {
     case BFD_RELOC_64:
+      code = fixP->fx_r_type;
+      break;
+    case BFD_RELOC_32:
       code = fixP->fx_r_type;
       break;
     case BFD_RELOC_RAISIN64_12_PCREL:
@@ -633,7 +641,7 @@ md_pcrel_from (fixS *fixP)
 
   switch (fixP->fx_r_type)
     {
-    case BFD_RELOC_64:
+    case BFD_RELOC_32:
       return addr + 0;
     case BFD_RELOC_RAISIN64_12_PCREL:
       /* Offset is from the beginning of the instruction.  */
