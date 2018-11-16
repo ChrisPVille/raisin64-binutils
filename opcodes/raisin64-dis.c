@@ -20,6 +20,7 @@
 
 #include "sysdep.h"
 #include <stdio.h>
+#include <stdint.h>
 
 #define STATIC_TABLE
 #define DEFINE_TABLE
@@ -62,7 +63,7 @@ print_insn_raisin64 (bfd_vma addr, struct disassemble_info * info)
   stream = info->stream;
   const raisin64_opc_info_t * opcode;
   bfd_byte buffer[8];
-  volatile unsigned long long iword;
+  uint64_t iword;
   fpr = info->fprintf_func;
 
   if ((status = info->read_memory_func (addr, buffer, 8, info)))
@@ -70,88 +71,8 @@ print_insn_raisin64 (bfd_vma addr, struct disassemble_info * info)
 
   iword = bfd_getb64 (buffer);
 
-  //TODO 64-bit only
-  if(iword>>62 == 3)
-  {
-    length = 8;
-    opcode = &raisin64_opc_info[(iword >> 56) & 0x3F];
-    switch (opcode->itype)
-    {
-    case RAISIN64_NONE:
-      fpr (stream, "%s", opcode->name);
-      break;
-    case RAISIN64_DS1S2:
-      fpr (stream, "%s\t%s, %s, %s", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], reg_names[OP_RS2(iword)]);
-      break;
-    case RAISIN64_S1:
-      fpr (stream, "%s\t%s", opcode->name, reg_names[OP_RS1(iword)]);
-      break;
-    case RAISIN64_DD2S1S2:
-      fpr (stream, "%s\t%s, %s, %s, %s", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RD2(iword)], reg_names[OP_RS1(iword)], reg_names[OP_RS2(iword)]);
-      break;
-    case RAISIN64_JDS1I: //TODO relative jump back to label?
-      fpr (stream, "%s\t%s, %s, 0x%llx", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], OP_IMM32(iword)<<1);
-      break;
-    case RAISIN64_DS1I:
-      fpr (stream, "%s\t%s, %s, 0x%llx", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], OP_IMM32(iword));
-      break;
-    case RAISIN64_DI:
-      fpr (stream, "%s\t%s, 0x%llx", opcode->name, reg_names[OP_RD(iword)], OP_IMM32(iword));
-      break;
-    case RAISIN64_JI:
-      fpr (stream, "%s\t0x%llx", opcode->name, (iword & 0xFFFFFFFFFFFFFF)<<1);
-      break;
-    case RAISIN64_DS1S2I: //TODO FPU call
-      fpr (stream, "%s\t%s, %s, %s, func:0x%llx", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], reg_names[OP_RS2(iword)], OP_IMM32(iword));
-      break;
-    case RAISIN64_BAD:
-      fpr (stream, "bad");
-      break;
-    default:
-      abort();
-    }
-  }
-  else if(iword>>62 == 2)
-  {
-    length = 4;
-    opcode = &raisin64_opc_info[(iword >> 56) & 0x3F];
-    switch (opcode->itype)
-    {
-    case RAISIN64_NONE:
-      fpr (stream, "%s", opcode->name);
-      break;
-    case RAISIN64_DS1S2:
-      fpr (stream, "%s\t%s, %s, %s", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], reg_names[OP_RS2(iword)]);
-      break;
-    case RAISIN64_S1:
-      fpr (stream, "%s\t%s", opcode->name, reg_names[OP_RS1(iword)]);
-      break;
-    case RAISIN64_DD2S1S2:
-      fpr (stream, "%s\t%s, %s, %s, %s", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RD2(iword)], reg_names[OP_RS1(iword)], reg_names[OP_RS2(iword)]);
-      break;
-    case RAISIN64_JDS1I: //TODO relative jump back to label?
-      fpr (stream, "%s\t%s, %s, 0x%llx", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], OP_IMM32(iword)<<1);
-      break;
-    case RAISIN64_DS1I:
-      fpr (stream, "%s\t%s, %s, 0x%llx", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1_32I(iword)], OP_IMM12(iword));
-      break;
-    case RAISIN64_DI:
-      fpr (stream, "%s\t%s, 0x%llx", opcode->name, reg_names[OP_RD(iword)], OP_IMM12(iword));
-      break;
-    case RAISIN64_JI:
-      fpr (stream, "bad");
-      break;
-    case RAISIN64_DS1S2I:
-      fpr (stream, "bad");
-      break;
-    case RAISIN64_BAD:
-      fpr (stream, "bad");
-      break;
-    default:
-      abort();
-    }
-  }
-  else
+  //8-Bit type
+  if(iword>>63 == 0)
   {
     length = 2;
     unsigned int opNum;
@@ -167,7 +88,10 @@ print_insn_raisin64 (bfd_vma addr, struct disassemble_info * info)
       fpr (stream, "%s\t%s, %s, %s", opcode->name, reg_names[OP_RDRS1_16(iword)], reg_names[OP_RDRS1_16(iword)], reg_names[OP_RS2_16R(iword)]);
       break;
     case RAISIN64_DS1I:
-      fpr (stream, "%s\t%s, %s, 0x%llx", opcode->name, reg_names[OP_RDRS1_16(iword)], reg_names[OP_RDRS1_16(iword)], OP_IMM6(iword));
+      if(opcode->signedImm)
+        fpr (stream, "%s\t%s, %s, %d", opcode->name, reg_names[OP_RDRS1_16(iword)], reg_names[OP_RDRS1_16(iword)], (int)OP_IMM6(iword));
+      else
+        fpr (stream, "%s\t%s, %s, %u", opcode->name, reg_names[OP_RDRS1_16(iword)], reg_names[OP_RDRS1_16(iword)], (unsigned int)OP_IMM6(iword));
       break;
     case RAISIN64_S1:
       fpr (stream, "%s\t%s", opcode->name, reg_names[OP_RDRS1_16(iword)]);
@@ -178,6 +102,81 @@ print_insn_raisin64 (bfd_vma addr, struct disassemble_info * info)
     default:
       abort();
     }
+
+    return length;
+  }
+
+  //32/64 Bit types
+  if(iword>>62 == 3) length = 8;
+  else length = 4;
+
+  opcode = &raisin64_opc_info[(iword >> 56) & 0x3F];
+
+  switch (opcode->itype)
+  {
+  case RAISIN64_NONE:
+    fpr (stream, "%s", opcode->name);
+    break;
+  case RAISIN64_DS1S2:
+    fpr (stream, "%s\t%s, %s, %s", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], reg_names[OP_RS2(iword)]);
+    break;
+  case RAISIN64_S1:
+    fpr (stream, "%s\t%s", opcode->name, reg_names[OP_RS1(iword)]);
+    break;
+  case RAISIN64_DD2S1S2:
+    fpr (stream, "%s\t%s, %s, %s, %s", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RD2(iword)], reg_names[OP_RS1(iword)], reg_names[OP_RS2(iword)]);
+    break;
+  case RAISIN64_BDS1I: //TODO relative jump back to label?
+    if(length == 8)
+      fpr (stream, "%s\t%s, %s, %lld", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], ((long long)((int32_t)OP_IMM32(iword)))<<1);
+    else
+      fpr (stream, "%s\t%s, %s, %d", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], ((int)OP_IMM12(iword))<<1);
+    break;
+  case RAISIN64_MDS1I:
+    if(length == 8)
+      fpr (stream, "%s\t%s, %d(%s)", opcode->name, reg_names[OP_RD(iword)], (int32_t)OP_IMM32(iword), reg_names[OP_RS1(iword)]);
+    else
+      fpr (stream, "%s\t%s, %d(%s)", opcode->name, reg_names[OP_RD(iword)], (int)OP_IMM12(iword), reg_names[OP_RS1_32I(iword)]);
+    break;
+  case RAISIN64_DS1I:
+    if(length == 8)
+    {
+      if(opcode->signedImm)
+        fpr (stream, "%s\t%s, %s, %d", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], (int32_t)OP_IMM32(iword));
+      else
+        fpr (stream, "%s\t%s, %s, 0x%x", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], (unsigned int)OP_IMM32(iword));
+    }
+    else
+    {
+      if(opcode->signedImm)
+        fpr (stream, "%s\t%s, %s, %d", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1_32I(iword)], (int)OP_IMM12(iword));
+      else
+        fpr (stream, "%s\t%s, %s, 0x%x", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1_32I(iword)], (unsigned int)OP_IMM12(iword));
+    }
+    break;
+  case RAISIN64_DI:
+    if(length == 8)
+      fpr (stream, "%s\t%s, 0x%x", opcode->name, reg_names[OP_RD(iword)], (unsigned int)OP_IMM32(iword));
+    else
+      fpr (stream, "%s\t%s, 0x%x", opcode->name, reg_names[OP_RD(iword)], (unsigned int)OP_IMM12(iword));
+    break;
+  case RAISIN64_JI:
+    if(length == 8)
+      fpr (stream, "%s\t0x%llx", opcode->name, (long long unsigned)(iword & 0xFFFFFFFFFFFFFF)<<1);
+    else
+      fpr (stream, "bad");
+    break;
+  case RAISIN64_DS1S2I: //TODO FPU call
+    if(length == 8)
+      fpr (stream, "%s\t%s, %s, %s, func:0x%x", opcode->name, reg_names[OP_RD(iword)], reg_names[OP_RS1(iword)], reg_names[OP_RS2(iword)], (unsigned int)OP_IMM32(iword));
+    else
+      fpr (stream, "bad");
+    break;
+  case RAISIN64_BAD:
+    fpr (stream, "bad");
+    break;
+  default:
+    abort();
   }
 
   return length;
