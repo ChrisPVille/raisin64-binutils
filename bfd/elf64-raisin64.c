@@ -398,7 +398,7 @@ raisin64_elf_check_relocs (bfd *abfd,
 #define elf_backend_can_gc_sections		1
 #define elf_backend_rela_normal			1
 
-#define bfd_elf32_bfd_reloc_type_lookup		raisin64_reloc_type_lookup
-#define bfd_elf32_bfd_reloc_name_lookup		raisin64_reloc_name_lookup
+#define bfd_elf64_bfd_reloc_type_lookup		raisin64_reloc_type_lookup
+#define bfd_elf64_bfd_reloc_name_lookup		raisin64_reloc_name_lookup
 
-#include "elf32-target.h"
+#include "elf64-target.h"
