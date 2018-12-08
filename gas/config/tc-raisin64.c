@@ -244,7 +244,7 @@ md_assemble (char *str)
       return;
     }
 
-  p = frag_more(8);
+  p = frag_more(8); //TODO should decide what to do before fragging because it moves '.' and screws up labeled vs . jumps
 
   switch (opcode->itype)
     {
@@ -365,7 +365,13 @@ md_assemble (char *str)
               as_warn("signed immediate value used for unsigned instruction");
             }
           }
-          iword |= _64S_IMM_MASK & ((unsigned long long)arg.X_add_number << _64S_IMM_SHIFT);
+
+          fix_new_exp (frag_now, //Which fragment
+                     p - frag_now->fr_literal + 4, //Location in current fragment (4 bytes into the 8-byte inst)
+                     4,    //4-byte relocation
+                     &arg, //Our Expression
+                     FALSE, //PC-Relative
+                     BFD_RELOC_RAISIN64_DATA32); //BFD Relocation type
         }
       }
       break;
@@ -401,7 +407,13 @@ md_assemble (char *str)
               as_warn("signed immediate value used for unsigned instruction");
             }
           }
-          iword |= _64S_IMM_MASK & ((unsigned long long)arg.X_add_number << _64S_IMM_SHIFT);
+
+          fix_new_exp (frag_now, //Which fragment
+                     p - frag_now->fr_literal + 4, //Location in current fragment (4 bytes into the 8-byte inst)
+                     4,    //4-byte relocation
+                     &arg, //Our Expression
+                     FALSE, //PC-Relative
+                     BFD_RELOC_RAISIN64_DATA32); //BFD Relocation type
           EAT_SPACES;
         }
 
@@ -585,6 +597,16 @@ md_apply_fix (fixS *fixP ATTRIBUTE_UNUSED,
       md_number_to_chars (buf, newval, 4);
       break;
 
+    case BFD_RELOC_RAISIN64_DATA32:
+      if (!val) break;
+      if ((unsigned long long) val > ((unsigned long long)1<<32)-1) as_bad_where (fixP->fx_file, fixP->fx_line,
+                      _("symbol's value too large for BFD_RELOC_RAISIN64_DATA32 field"));
+
+      newval = md_chars_to_number (buf, 4);
+      newval |= (unsigned long long)val & 0xffffffff;
+      md_number_to_chars (buf, newval, 4);
+      break;
+
     case BFD_RELOC_RAISIN64_12_PCREL:
       if (!val) break;
       if (val < -(1<<12) || val > (1<<12)-1) as_bad_where (fixP->fx_file, fixP->fx_line,
@@ -641,6 +663,9 @@ tc_gen_reloc (asection *section ATTRIBUTE_UNUSED, fixS *fixP)
       code = fixP->fx_r_type;
       break;
     case BFD_RELOC_32:
+      code = fixP->fx_r_type;
+      break;
+    case BFD_RELOC_RAISIN64_DATA32:
       code = fixP->fx_r_type;
       break;
     case BFD_RELOC_RAISIN64_12_PCREL:

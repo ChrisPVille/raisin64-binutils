@@ -91,8 +91,22 @@ static reloc_howto_type raisin64_elf_howto_table [] =
          0x00000000FFFFFFFF,    /* dst_mask.  */
          TRUE),                 /* pcrel_offset.  */
 
+  /* A 32 bit relocation for data */
+  HOWTO (R_RAISIN64_DATA32,    /* type.  */
+         0,                     /* rightshift.  */
+         2,                     /* size (0 = byte, 1 = short, 2 = long).  */
+         32,                    /* bitsize.  */
+         FALSE,                  /* pc_relative.  */
+         0,                     /* bitpos.  */
+         complain_overflow_bitfield, /* complain_on_overflow.  */
+         bfd_elf_generic_reloc, /* special_function.  */
+         "R_RAISIN64_DATA32",          /* name.  */
+         FALSE,                 /* partial_inplace.  */
+         0,                     /* src_mask.  */
+         0x00000000FFFFFFFF,    /* dst_mask.  */
+         TRUE),                 /* pcrel_offset.  */
 };
-
+
 /* Map BFD reloc types to Raisin64 ELF reloc types.  */
 
 struct raisin64_reloc_map
@@ -106,6 +120,7 @@ static const struct raisin64_reloc_map raisin64_reloc_map [] =
   { BFD_RELOC_NONE,	       R_RAISIN64_NONE },
   { BFD_RELOC_64,	       R_RAISIN64_56 },
   { BFD_RELOC_RAISIN64_12_PCREL,  R_RAISIN64_PCREL12 },
+  { BFD_RELOC_RAISIN64_DATA32,    R_RAISIN64_DATA32 },
   { BFD_RELOC_32,              R_RAISIN64_PCREL32 },
 };
 

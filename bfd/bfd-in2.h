@@ -2262,10 +2262,10 @@ enum bfd_architecture
 #define bfd_mach_frvtomcat     499     /* fr500 prototype.  */
 #define bfd_mach_fr500         500
 #define bfd_mach_fr550         550
-  bfd_arch_moxie,     /* The moxie processor.  */
-#define bfd_mach_moxie         1
   bfd_arch_raisin64,     /* The raisin64 processor.  */
 #define bfd_mach_raisin64      1
+  bfd_arch_moxie,     /* The moxie processor.  */
+#define bfd_mach_moxie         1
   bfd_arch_ft32,      /* The ft32 processor.  */
 #define bfd_mach_ft32          1
 #define bfd_mach_ft32b         2
@@ -3146,11 +3146,14 @@ to compensate for the borrow when the low bits are added.  */
   BFD_RELOC_MIPS_JUMP_SLOT,
 
 
+/* Raisin64 ELF relocations.  */
+  BFD_RELOC_RAISIN64_12_PCREL,
+  BFD_RELOC_RAISIN64_DATA32,
+
+
 /* Moxie ELF relocations.  */
   BFD_RELOC_MOXIE_10_PCREL,
 
-/* Raisin64 ELF relocations.  */
-  BFD_RELOC_RAISIN64_12_PCREL,
 
 /* FT32 ELF relocations.  */
   BFD_RELOC_FT32_10,
