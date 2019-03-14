@@ -599,7 +599,7 @@ md_apply_fix (fixS *fixP ATTRIBUTE_UNUSED,
 
     case BFD_RELOC_RAISIN64_DATA32:
       if (!val) break;
-      if (val < -((long long)1<<31) || val > ((long long)1<<31)-1) as_bad_where (fixP->fx_file, fixP->fx_line,
+      if (val < -((long long)1<<31) || val > ((long long)1<<32)-1) as_bad_where (fixP->fx_file, fixP->fx_line,
                       _("symbol's value too large for BFD_RELOC_RAISIN64_DATA32 field"));
 
       newval = md_chars_to_number (buf, 4);
